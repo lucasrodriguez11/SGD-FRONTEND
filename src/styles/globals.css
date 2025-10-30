@@ -1,0 +1,41 @@
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+
+/* Archivo global.css */
+
+/* Ancho de la barra de desplazamiento */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px; /* También puedes definir la altura si es necesario */
+}
+
+/* Estilo del fondo de la pista de la scrollbar */
+::-webkit-scrollbar-track {
+  background-color: #f1f1f1; /* Fondo claro */
+}
+
+/* Estilo del "pulgar" de la scrollbar (la parte que se puede arrastrar) */
+::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 8px; /* Bordes redondeados */
+}
+
+/* Cambia el color del pulgar al pasar el mouse */
+::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
