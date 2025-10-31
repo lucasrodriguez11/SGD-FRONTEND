@@ -1,29 +1,87 @@
-# Create T3 App
+# 🎓 SGD — Sistema de Gestión Documental (Proyecto de Tesis)
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+> Plataforma web para gestionar expedientes municipales con trazabilidad completa, tiempo real y buenas prácticas.
 
-## What's next? How do I make an app with this?
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
+[![Bun](https://img.shields.io/badge/Bun-Runtime-black)](https://bun.sh/)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green)](https://www.mongodb.com/)
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+---
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+## 📌 Resumen
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+SGD es un sistema pensado para la administración pública local que permite:
 
-## Learn More
+- Registrar expedientes y darles seguimiento durante todo su ciclo de vida.
+- Enviar/recepcionar entre despachos con historial de movimientos y estados.
+- Notificar en tiempo real (WS) y conversar por Inbox entre despachos.
+- Gestionar organismos (despachos), usuarios y temas desde un panel de “Gestión Admin”.
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+El diseño y las decisiones técnicas se alinean con los objetivos académicos de la tesis: arquitectura clara, tipada, escalable y con foco en experiencia de uso.
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+---
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+## 🧩 Módulos principales
 
-## How do I deploy this?
+- **Expedientes**: creación, búsqueda avanzada, timeline de movimientos; estados: `REGISTRADO`, `ENVIADO`, `RECEPCIONADO`, `ARCHIVADO`.
+- **Movimientos**: derivaciones entre despachos con suma de fojas y auditoría.
+- **Recepción y Archivo**: bandejas dedicadas con acciones rápidas.
+- **Inbox**: mensajería entre despachos con hilos, lectura y WS en vivo.
+- **Notificaciones**: campana con contador, leídos/no leídos y filtrado por despacho.
+- **Gestión Admin**: alta/edición de Despachos, Usuarios y Temas.
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+---
+
+## 🏗️ Arquitectura y tecnologías
+
+- **Backend (SGD-BACKEND)**: Bun + Hono (TypeScript), MongoDB/Mongoose, Zod, JWT, WS (`wsHub`), logging estructurado. Patrón de capas: `database → services → http`.
+- **Frontend (SGD-FRONTEND)**: Next.js 14, React 18, Chakra UI, Axios, WebSocket, `jwt-decode`. UI responsiva “mobile‑first”.
+- **Tiempo real**: canales WebSocket segmentados (`notifications:<despachoId>`, `inbox`).
+- **Validación**: Zod (DTOs y middlewares); respuestas API normalizadas.
+
+---
+
+## 🚀 Puesta en marcha (local)
+
+### Prerrequisitos
+
+- Bun 1.x (backend) y Node 20+ (frontend)
+- MongoDB local o Atlas
+
+### Pasos
+
+```bash
+# Backend
+cd SGD-BACKEND
+bun install
+bun run dev
+
+# Frontend (otro terminal)
+cd SGD-FRONTEND
+npm install
+npm run dev
+
+# Navegar a
+http://localhost:3000
+```
+
+Variables típicas: `MONGODB_URL`, `CORS_ORIGIN`, `NEXT_PUBLIC_BACKEND_BASE_URL`.
+
+---
+
+## 📁 Estructura (resumen)
+
+```
+├── SGD-BACKEND/   # API (Bun + Hono + MongoDB)
+└── SGD-FRONTEND/  # Web (Next.js + Chakra UI)
+```
+
+---
+
+## 👤 Autoría
+
+Proyecto de tesis — Lucas Nahuel Rodríguez.  
+Tecnologías modernas, arquitectura limpia y enfoque en experiencia de usuario y mantenibilidad.
+
+---
