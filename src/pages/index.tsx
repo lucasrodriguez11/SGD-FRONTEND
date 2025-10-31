@@ -22,6 +22,7 @@ import { useRouter } from 'next/router';
 import { ExpedienteModal } from '../components/Expedientes/ExpedienteModal';
 import { MovimientoModal } from '../components/Expedientes/MovimientoModal';
 import { expedientesApi, movimientosApi, recepcionesApi, type Expediente, type CreateExpedienteDto, type CreateMovimientoDto } from '~/services/api';
+import type { AxiosError } from 'axios';
 
 const HomePage = () => {
   const [expedientes, setExpedientes] = useState<Expediente[]>([]);
@@ -94,10 +95,8 @@ const HomePage = () => {
 
   // WS notifications: prepend in panel
   useEffect(() => {
+    const u = authUser.get<{ despachoId?: string }>();
     const ws = connectNotifications((n: NotificationWS) => {
-      if (n.type === 'EXPEDIENTE_REGISTRADO' || n.type === 'EXPEDIENTE_CREADO') {
-        toast({ title: `Expediente ${n.numeroExpediente} registrado`, status: 'info', duration: 2500 });
-      }
       if (n.type === 'EXPEDIENTE_RECIBIDO') {
         setRecepUnread((c) => { const v = c + 1; localStorage.setItem('recep_unread', String(v)); return v; });
       }
@@ -108,7 +107,7 @@ const HomePage = () => {
       });
       const text = n.message ?? (n.type === 'EXPEDIENTE_REGISTRADO' ? `Registrado en ${n.despachoActual}` : n.type);
       setNotifList((prev) => [{ title: n.type, text, color: 'blue' as const }, ...prev].slice(0, 20));
-    });
+    }, u?.despachoId);
     return () => ws.close();
   }, [toast]);
 
@@ -121,23 +120,16 @@ const HomePage = () => {
 
   const handleExpedienteSubmit = async (data: CreateExpedienteDto) => {
     try {
-      await expedientesApi.create(data);
-      toast({
-        title: 'Expediente registrado con éxito',
-        status: 'success',
-        duration: 3000
-      });
+      const res = await expedientesApi.create(data);
+      const numero = res?.data?.expediente?.numeroExpediente ?? data.numeroExpediente;
+      toast({ title: `Expediente "${numero}" fue registrado con éxito`, status: 'success', duration: 3000 });
       void fetchExpedientes();
       onExpedienteModalClose();
-    } catch (error) {
-      const message = error instanceof Error
-        ? error.message
-        : 'Error al crear expediente';
-      toast({
-        title: message,
-        status: 'error',
-        duration: 3000
-      });
+    } catch (err: unknown) {
+      // Mostrar mensaje del backend (p.ej., EXPEDIENTE_DUPLICATE 409)
+      const e = err as AxiosError<{ error?: { message?: string } }>;
+      const message = e.response?.data?.error?.message ?? e.message ?? 'Error al crear expediente';
+      toast({ title: message, status: 'error', duration: 3000 });
     }
   };
 

@@ -24,8 +24,9 @@ export type NotificationWS = {
     createdAt?: string;
 };
 
-export function connectNotifications(onMessage: (n: NotificationWS) => void) {
-    const url = computeWsUrl('notifications');
+export function connectNotifications(onMessage: (n: NotificationWS) => void, despachoId?: string) {
+    const channel = despachoId ? `notifications:${despachoId}` : 'notifications';
+    const url = computeWsUrl(channel);
     const ws = new WebSocket(url);
     ws.onmessage = (ev: MessageEvent<string>) => {
         try {

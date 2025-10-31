@@ -559,7 +559,7 @@ export const inboxApi = {
 // NOTIFICATIONS API
 // =========================================================================
 
-export type NotificationDTO = { _id: string; type: string; message: string; createdAt: string };
+export type NotificationDTO = { _id: string; type: string; message: string; createdAt: string; orgTargetId?: string; readAt?: string };
 
 export const notificationsApi = {
     list: async (params?: { limit?: number }): Promise<ApiResponse<{ notifications: NotificationDTO[] }>> => {

@@ -20,7 +20,7 @@ import {
   useBreakpointValue,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
-import { authToken, authUser, notificationsApi, type NotificationDTO, despachosApi } from '~/services/api';
+import { authToken, authUser, notificationsApi } from '~/services/api';
 import { connectNotifications, type NotificationWS } from '~/services/ws';
 import {
   Menu as MenuIcon,
@@ -46,8 +46,8 @@ export const Navbar: React.FC = () => {
   const [displayName, setDisplayName] = React.useState<string>('Usuario');
   const [notifUnread, setNotifUnread] = React.useState<number>(0);
   const [notifOpen, setNotifOpen] = React.useState<boolean>(false);
-  const [myDespName, setMyDespName] = React.useState<string>('');
-  const [items, setItems] = React.useState<Array<{ id?: string; title: string; text: string; createdAt?: string }>>([]);
+  const [myDespId, setMyDespId] = React.useState<string>('');
+  const [items, setItems] = React.useState<Array<{ id?: string; title: string; text: string; createdAt?: string; readAt?: string }>>([]);
 
   const formatRelative = (iso?: string): string => {
     if (!iso) return 'ahora';
@@ -69,21 +69,24 @@ export const Navbar: React.FC = () => {
   React.useEffect(() => {
     const u = authUser.get<{ name?: string; despachoId?: string }>();
     if (u?.name) setDisplayName(u.name);
-    (async () => {
-      try {
-        if (u?.despachoId) {
-          const res = await despachosApi.getById(u.despachoId);
-          if (res.success && res.data) setMyDespName(res.data.despacho.nombre);
-        }
-      } catch {}
+    if (u?.despachoId) setMyDespId(u.despachoId);
+    void (async () => {
       try {
         const res = await notificationsApi.list({ limit: 20 });
         if (res.success && res.data) {
-          setItems(res.data.notifications.map(n => ({ id: (n as any)._id, title: n.type, text: n.message, createdAt: n.createdAt })));
+          const out: Array<{ id?: string; title: string; text: string; createdAt?: string; readAt?: string }> = [];
+          for (const n of res.data.notifications as Array<{ _id: string; type: string; message: string; createdAt: string; orgTargetId?: string; readAt?: string }>) {
+            if (!n.orgTargetId || (myDespId ? n.orgTargetId === myDespId : true)) {
+              out.push({ id: n._id, title: n.type, text: n.message, createdAt: n.createdAt, readAt: n.readAt });
+            }
+          }
+          setItems(out);
         }
-      } catch {}
+      } catch {
+        // ignore
+      }
     })();
-  }, []);
+  }, [myDespId]);
 
   React.useEffect(() => {
     const read = () => {
@@ -100,14 +103,12 @@ export const Navbar: React.FC = () => {
   // Realtime notifications filtered to my despacho
   React.useEffect(() => {
     const ws = connectNotifications((n: NotificationWS) => {
-      // filter by despacho target when provided
-      if (n.orgTargetId && myDespName && n.orgTargetId !== myDespName) return;
       setItems((prev) => [{ title: n.type, text: n.message ?? n.type, createdAt: n.createdAt }, ...prev].slice(0, 20));
       setNotifUnread((c) => c + 1);
       localStorage.setItem('notif_unread', String((parseInt(localStorage.getItem('notif_unread') ?? '0', 10) || 0) + 1));
-    });
+    }, myDespId);
     return () => ws.close();
-  }, [myDespName]);
+  }, [myDespId]);
 
   // Theme colors
   const bgColor = useColorModeValue('blue.600', 'blue.800');
@@ -220,8 +221,10 @@ export const Navbar: React.FC = () => {
                   <Text fontWeight="bold">Notificaciones</Text>
                   <Button size="xs" variant="ghost" onClick={async () => {
                     // marcar todas como leídas sin borrar
-                    const ids = items.map((n: any) => n.id).filter(Boolean) as string[];
-                    await Promise.all(ids.map(id => notificationsApi.markRead(id).catch(() => {})));
+                    const ids = items.map((n) => n.id).filter((id): id is string => Boolean(id));
+                    for (const id of ids) {
+                      try { await notificationsApi.markRead(id); } catch { /* ignore */ }
+                    }
                     setNotifUnread(0);
                     localStorage.setItem('notif_unread', '0');
                   }}>Marcar como leídas</Button>
@@ -233,13 +236,15 @@ export const Navbar: React.FC = () => {
                     <Flex key={idx} px={3} py={2} align="start" _hover={{ bg: menuHoverBg }}>
                       <Box>
                         <Badge colorScheme="blue" mb={1}>{n.title}</Badge>
-                        <Text fontSize="sm" color="gray.600">{n.text}</Text>
+                        <Text fontSize="sm" color="gray.600" fontWeight={n.readAt ? 'normal' : 'bold'}>
+                          {n.text}
+                        </Text>
                         <Text fontSize="xs" color="gray.500">{formatRelative(n.createdAt)}</Text>
                       </Box>
                       <Button size="xs" ml="auto" variant="ghost" onClick={async () => {
                         setItems(arr => arr.filter((_, i) => i !== idx));
                         if (n.id) {
-                          try { await notificationsApi.markRead(n.id); } catch {}
+                          try { await notificationsApi.markRead(n.id); } catch { }
                         }
                         setNotifUnread((c) => Math.max(0, c - 1));
                         localStorage.setItem('notif_unread', String(Math.max(0, (parseInt(localStorage.getItem('notif_unread') ?? '0', 10) || 0) - 1)));

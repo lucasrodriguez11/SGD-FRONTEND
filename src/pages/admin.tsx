@@ -109,6 +109,10 @@ const AdminPage: React.FC = () => {
     const [uRole, setURole] = useState<'ADMIN' | 'USER'>('USER');
     const userModal = useDisclosure();
 
+    // Asegura que el combo de despachos esté fresco al abrir el modal de usuario
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useEffect(() => { if (userModal.isOpen) { void loadDespachos(); } }, [userModal.isOpen]);
+
     const createUser = async () => {
         try {
             if (!uName.trim() || !uEmail.trim() || uPass.length < 6) {
@@ -157,6 +161,8 @@ const AdminPage: React.FC = () => {
             despModal.onClose();
             setSelectedDespacho(null);
             void fetchDespachos(despPage, despFilters);
+            // refrescar combo de despachos para la sección Usuarios
+            void loadDespachos();
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Error desconocido';
             toast({ title: message, status: 'error', duration: 2500 });
@@ -177,6 +183,8 @@ const AdminPage: React.FC = () => {
             }
             setConfirmDlg({ isOpen: false, despacho: null, action: null });
             void fetchDespachos(despPage, despFilters);
+            // refrescar lista global de despachos
+            void loadDespachos();
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Error desconocido';
             toast({ title: message, status: 'error', duration: 2500 });
@@ -220,7 +228,7 @@ const AdminPage: React.FC = () => {
                     shadow="sm"
                     cursor="pointer"
                     _hover={{ transform: 'translateY(-2px)', shadow: 'md' }}
-                    onClick={() => { setActivePanel('usuarios'); if (selectedDespachoId) void loadUsuarios(selectedDespachoId); }}
+                    onClick={() => { setActivePanel('usuarios'); void loadDespachos(); if (selectedDespachoId) void loadUsuarios(selectedDespachoId); }}
                 >
                     <Flex align="center" gap={3}><Icon as={UsersIcon} color="blue.500" /> <Text fontWeight="bold">Usuarios</Text></Flex>
                     <Badge colorScheme="blue">GESTIONAR</Badge>
@@ -342,8 +350,7 @@ const AdminPage: React.FC = () => {
 
             {activePanel === 'despachos' && (
                 <Box p={4} borderWidth="1px" borderRadius="md">
-                    <Flex justify="space-between" align="center" mb={4}>
-                        <Heading size="md">Despachos</Heading>
+                    <Flex justify="flex-end" align="center" mb={4}>
                         <Button colorScheme="blue" onClick={() => { setSelectedDespacho(null); despModal.onOpen(); }}>Nuevo Despacho</Button>
                     </Flex>
                     <Grid templateColumns={{ base: '1fr', lg: '350px 1fr' }} gap={6}>

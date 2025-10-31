@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Button, Container, Flex, Grid, GridItem, Heading, HStack, Icon, IconButton, Input, InputGroup, InputLeftElement, List, ListItem, Modal, ModalBody, ModalCloseButton, ModalContent, ModalHeader, ModalOverlay, Select, Spinner, Text, useDisclosure, useToast, VStack } from '@chakra-ui/react';
+import { Box, Container, Flex, Grid, GridItem, Heading, HStack, Icon, IconButton, Input, InputGroup, InputLeftElement, List, ListItem, Modal, ModalBody, ModalCloseButton, ModalContent, ModalHeader, ModalOverlay, Select, Spinner, Text, useDisclosure, useToast } from '@chakra-ui/react';
 import { BackBar } from '~/components/Layout/BackBar';
 import { inboxApi, despachosApi, authUser, type Despacho } from '~/services/api';
 import { connectInbox } from '~/services/ws';
@@ -26,6 +26,8 @@ const InboxPage: React.FC = () => {
     const [text, setText] = useState('');
     const newChat = useDisclosure();
     const chatEndRef = useRef<HTMLDivElement | null>(null);
+    // Track recently seen messages to avoid duplicates (history fetch + WS echo)
+    const recentKeys = useRef<Set<string>>(new Set());
 
     const despachosById = useMemo(() => new Map(despachos.map(d => [d._id, d])), [despachos]);
 
@@ -46,11 +48,22 @@ const InboxPage: React.FC = () => {
         if (!id) return;
         setPeerId(id);
         setLoadingHistory(true);
+        setText('');
+        // Clear recent de-dup set and show clean slate while loading
+        recentKeys.current.clear();
+        setHistory([]);
         try {
             const res = await inboxApi.listConversation(id, 200);
-            if (res.success && res.data) setHistory(res.data.messages);
+            if (res.success && res.data) {
+                setHistory(res.data.messages);
+                // Prime dedupe keys so WS echo doesn't duplicate
+                for (const m of res.data.messages) {
+                    const key = `${m.fromDespachoId}|${m.toDespachoId}|${m.text}|${m.createdAt ?? ''}`;
+                    recentKeys.current.add(key);
+                }
+            }
             // mark read on backend and reset locally
-            await inboxApi.readThread(id).catch(() => {});
+            await inboxApi.readThread(id).catch(() => { /* ignore */ });
             setThreads(prev => prev.map(th => th.peerId === id ? { ...th, unread: 0 } : th));
         } catch {
             setHistory([]);
@@ -64,6 +77,9 @@ const InboxPage: React.FC = () => {
         const ws = connectInbox((m) => {
             // If message belongs to selected conversation, append
             if ((m.fromDespachoId === peerId && m.toDespachoId === myDespachoId) || (m.toDespachoId === peerId && m.fromDespachoId === myDespachoId)) {
+                const key = `${m.fromDespachoId}|${m.toDespachoId}|${m.text}|${m.createdAt ?? ''}`;
+                if (recentKeys.current.has(key)) return;
+                recentKeys.current.add(key);
                 setHistory((arr) => [...arr, { fromDespachoId: m.fromDespachoId, toDespachoId: m.toDespachoId, text: m.text, createdAt: m.createdAt }]);
             }
             // Update threads summary
@@ -71,8 +87,8 @@ const InboxPage: React.FC = () => {
             setThreads((arr) => {
                 const exists = arr.find(t => t.peerId === otherId);
                 const incUnread = m.toDespachoId === myDespachoId && otherId !== peerId ? 1 : 0;
-                const updated = exists ? arr.map(t => t.peerId === otherId ? { peerId: otherId, lastMessage: m as any, unread: (t.unread ?? 0) + incUnread } : t)
-                                       : [{ peerId: otherId, lastMessage: m as any, unread: incUnread }, ...arr];
+                const updated = exists ? arr.map(t => t.peerId === otherId ? { peerId: otherId, lastMessage: m, unread: (t.unread ?? 0) + incUnread } : t)
+                    : [{ peerId: otherId, lastMessage: m, unread: incUnread }, ...arr];
                 return updated;
             });
         });
@@ -87,14 +103,15 @@ const InboxPage: React.FC = () => {
         try {
             const res = await inboxApi.sendMessage({ toDespachoId: peerId, text, fromDespachoId: myDespachoId });
             if (res.success && res.data?.message) {
+                // Limpiamos input y dejamos que el WS agregue el mensaje (evita duplicados)
                 setText('');
-                setHistory((arr) => [...arr, res.data.message]);
-                setThreads(prev => prev.map(t => t.peerId === peerId ? { ...t, lastMessage: res.data.message } : t));
+                setThreads(prev => prev.map(t => t.peerId === peerId ? { ...t, lastMessage: res.data!.message } : t));
             } else {
                 toast({ title: 'No se pudo enviar', status: 'warning', duration: 2000 });
             }
-        } catch (e: any) {
-            const msg: string = e?.response?.data?.error?.message || e?.message || '';
+        } catch (err: unknown) {
+            const e = err as { response?: { data?: { error?: { message?: string } } }; message?: string };
+            const msg: string = e?.response?.data?.error?.message ?? e?.message ?? '';
             const pretty = /forbidden|not allowed|no autorizado|no pertenece/i.test(msg)
                 ? 'No podés enviar mensajes desde este despacho.'
                 : /fromDespachoId/i.test(msg)
@@ -132,7 +149,7 @@ const InboxPage: React.FC = () => {
                                 return (
                                     <ListItem key={t.peerId} px={4} py={3} borderBottom="1px" borderColor="gray.100" cursor="pointer" _hover={{ bg: 'gray.50' }} onClick={() => void openThread(t.peerId)}>
                                         <Flex align="center" gap={3}>
-                                            <Box w={10} h={10} borderRadius="full" bg="blue.100" display="flex" alignItems="center" justifyContent="center" fontWeight="bold">{(d?.nombre ?? '??').slice(0,2).toUpperCase()}</Box>
+                                            <Box w={10} h={10} borderRadius="full" bg="blue.100" display="flex" alignItems="center" justifyContent="center" fontWeight="bold">{(d?.nombre ?? '??').slice(0, 2).toUpperCase()}</Box>
                                             <Box flex={1} minW={0}>
                                                 <Text fontWeight="bold" noOfLines={1}>{d?.nombre ?? t.peerId}</Text>
                                                 <Text fontSize="sm" color="gray.500" noOfLines={1}>{last}</Text>

@@ -48,7 +48,6 @@ const ConfiguracionPage: React.FC = () => {
                 <TabList>
                     <Tab>Perfil de Usuario</Tab>
                     <Tab>Perfil de Despacho</Tab>
-                    <Tab>Usuarios</Tab>
                 </TabList>
                 <TabPanels>
                     <TabPanel>
@@ -151,9 +150,6 @@ const ConfiguracionPage: React.FC = () => {
                                 }
                             }}>Guardar</Button>
                         </VStack>
-                    </TabPanel>
-                    <TabPanel>
-                        <Box borderWidth="1px" borderRadius="md" p={4} color="gray.500">Usuarios del despacho (próximo sprint).</Box>
                     </TabPanel>
                 </TabPanels>
             </Tabs>
