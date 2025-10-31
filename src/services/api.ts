@@ -662,6 +662,18 @@ export const usersApi = {
         const res = await apiClient.get<ApiResponse<{ users: UserDTO[] }>>(`users/by-despacho/${despachoId}`);
         return res.data;
     },
+    update: async (id: string, payload: { name?: string; email?: string; role?: 'ADMIN' | 'USER'; despachoId?: string | null }): Promise<ApiResponse<{ user: UserDTO }>> => {
+        const res = await apiClient.put<ApiResponse<{ user: UserDTO }>>(`users/${id}`, payload);
+        return res.data;
+    },
+    resetPassword: async (id: string, newPassword: string): Promise<ApiResponse<{ ok: boolean }>> => {
+        const res = await apiClient.post<ApiResponse<{ ok: boolean }>>(`users/${id}/password`, { newPassword });
+        return res.data;
+    },
+    delete: async (id: string): Promise<ApiResponse<{ ok: boolean }>> => {
+        const res = await apiClient.delete<ApiResponse<{ ok: boolean }>>(`users/${id}`);
+        return res.data;
+    },
 };
 
 // ============================================================================

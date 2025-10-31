@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Badge, Box, Button, Container, Flex, Heading, Text, VStack, useToast } from '@chakra-ui/react';
 import { connectNotifications, type NotificationWS } from '~/services/ws';
-import { notificationsApi } from '~/services/api';
+import { notificationsApi, type NotificationDTO } from '~/services/api';
 import { BackBar } from '~/components/Layout/BackBar';
 
 const FeedPage: React.FC = () => {
@@ -12,7 +12,7 @@ const FeedPage: React.FC = () => {
     void (async () => {
       const res = await notificationsApi.list({ limit: 50 });
       if (res.success && res.data) {
-        const mapped = res.data.notifications.map((n) => ({ id: (n as any)._id, title: n.type, text: n.message, color: 'blue' as const }));
+        const mapped = res.data.notifications.map((n: NotificationDTO) => ({ id: n._id, title: n.type, text: n.message, color: 'blue' as const }));
         setItems(mapped);
       }
     })();
@@ -37,7 +37,7 @@ const FeedPage: React.FC = () => {
             <Flex align="center" gap={2} mb={1}>
               <Badge colorScheme={n.color}>{n.title}</Badge>
               <Button size="xs" ml="auto" onClick={async () => {
-                try { if ((n as any).id) await notificationsApi.markRead((n as any).id as string); } catch { toast({ title: 'No se pudo marcar como leído', status: 'warning', duration: 1500 }); }
+                try { if (n.id) await notificationsApi.markRead(n.id); } catch { toast({ title: 'No se pudo marcar como leído', status: 'warning', duration: 1500 }); }
                 setItems((arr) => arr.filter((_, i) => i !== idx));
               }}>×</Button>
             </Flex>

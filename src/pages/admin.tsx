@@ -108,6 +108,15 @@ const AdminPage: React.FC = () => {
     const [uDesp, setUDesp] = useState<string>('');
     const [uRole, setURole] = useState<'ADMIN' | 'USER'>('USER');
     const userModal = useDisclosure();
+    const userEditModal = useDisclosure();
+    const userPassModal = useDisclosure();
+    const [selUserId, setSelUserId] = useState<string>('');
+    const [eName, setEName] = useState('');
+    const [eEmail, setEEmail] = useState('');
+    const [eRole, setERole] = useState<'ADMIN' | 'USER'>('USER');
+    const [eDesp, setEDesp] = useState<string>('');
+    const [pNew, setPNew] = useState('');
+    const [confirmUserDlg, setConfirmUserDlg] = useState<{ isOpen: boolean; userId?: string; name?: string }>({ isOpen: false });
 
     // Asegura que el combo de despachos esté fresco al abrir el modal de usuario
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -299,7 +308,10 @@ const AdminPage: React.FC = () => {
                                                     <Td>{u.email}</Td>
                                                     <Td><Badge colorScheme={u.role === 'ADMIN' ? 'purple' : 'blue'}>{u.role}</Badge></Td>
                                                     <Td>
-                                                        <Button size="xs" mr={2} onClick={async () => { const newRole = u.role === 'ADMIN' ? 'USER' : 'ADMIN'; await usersApi.changeRole(u._id, newRole); void loadUsuarios(selectedDespachoId); }}>Cambiar rol</Button>
+                                                        <Button size="xs" mr={2} onClick={async () => { const newRole = u.role === 'ADMIN' ? 'USER' : 'ADMIN'; await usersApi.changeRole(u._id, newRole); toast({ title: 'Rol actualizado', status: 'success', duration: 1500 }); void loadUsuarios(selectedDespachoId); }}>Rol</Button>
+                                                        <Button size="xs" mr={2} onClick={() => { setSelUserId(u._id); setEName(u.name); setEEmail(u.email); setERole(u.role); setEDesp(u.despachoId ?? ''); userEditModal.onOpen(); }}>Editar</Button>
+                                                        <Button size="xs" mr={2} onClick={() => { setSelUserId(u._id); setPNew(''); userPassModal.onOpen(); }}>Contraseña</Button>
+                                                        <Button size="xs" colorScheme="red" onClick={() => setConfirmUserDlg({ isOpen: true, userId: u._id, name: u.name })}>Eliminar</Button>
                                                     </Td>
                                                 </Tr>
                                             ))}
@@ -409,6 +421,80 @@ const AdminPage: React.FC = () => {
                     </ModalBody>
                 </ModalContent>
             </Modal>
+
+            {/* Modal Editar Usuario */}
+            <Modal isOpen={userEditModal.isOpen} onClose={userEditModal.onClose} isCentered size="md">
+                <ModalOverlay />
+                <ModalContent maxW={{ base: '95%', md: '540px' }} mx={{ base: 2, md: 0 }}>
+                    <ModalHeader>Editar Usuario</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody pb={4}>
+                        <FormControl mb={2}><FormLabel>Nombre</FormLabel><Input value={eName} onChange={(e) => setEName(e.target.value)} /></FormControl>
+                        <FormControl mb={2}><FormLabel>Email</FormLabel><Input type="email" value={eEmail} onChange={(e) => setEEmail(e.target.value)} /></FormControl>
+                        <FormControl mb={2}><FormLabel>Despacho</FormLabel>
+                            <Select placeholder="(opcional)" value={eDesp} onChange={(e) => setEDesp(e.target.value)}>
+                                {despachos.map((d) => (<option key={d._id} value={d._id}>{d.tipo} - {d.nombre}</option>))}
+                            </Select>
+                        </FormControl>
+                        <FormControl mb={4}><FormLabel>Rol</FormLabel>
+                            <Select value={eRole} onChange={(e) => setERole(e.target.value as 'ADMIN' | 'USER')}>
+                                <option value="USER">USER</option>
+                                <option value="ADMIN">ADMIN</option>
+                            </Select>
+                        </FormControl>
+                        <Button w="full" colorScheme="blue" onClick={async () => {
+                            try {
+                                if (!selUserId) return;
+                                const payload: { name?: string; email?: string; role?: 'ADMIN' | 'USER'; despachoId?: string | null } = { name: eName, email: eEmail, role: eRole, despachoId: eDesp || null };
+                                const res = await usersApi.update(selUserId, payload);
+                                if (res.success) { toast({ title: 'Usuario actualizado', status: 'success', duration: 1500 }); userEditModal.onClose(); void loadUsuarios(selectedDespachoId); }
+                            } catch {
+                                toast({ title: 'No se pudo actualizar', status: 'error', duration: 2000 });
+                            }
+                        }}>Guardar</Button>
+                    </ModalBody>
+                </ModalContent>
+            </Modal>
+
+            {/* Modal Cambiar Contraseña */}
+            <Modal isOpen={userPassModal.isOpen} onClose={userPassModal.onClose} isCentered size="sm">
+                <ModalOverlay />
+                <ModalContent maxW={{ base: '92%', md: '420px' }} mx={{ base: 2, md: 0 }}>
+                    <ModalHeader>Cambiar contraseña</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody pb={4}>
+                        <FormControl mb={3}><FormLabel>Nueva contraseña</FormLabel><Input type="password" value={pNew} onChange={(e) => setPNew(e.target.value)} placeholder="Mínimo 6 caracteres" /></FormControl>
+                        <Button w="full" colorScheme="blue" isDisabled={!pNew || pNew.length < 6} onClick={async () => {
+                            try {
+                                if (!selUserId) return;
+                                const res = await usersApi.resetPassword(selUserId, pNew);
+                                if (res.success) { toast({ title: 'Contraseña actualizada', status: 'success', duration: 1500 }); userPassModal.onClose(); setPNew(''); }
+                            } catch {
+                                toast({ title: 'No se pudo cambiar la contraseña', status: 'error', duration: 2000 });
+                            }
+                        }}>Guardar</Button>
+                    </ModalBody>
+                </ModalContent>
+            </Modal>
+
+            {/* Confirmar eliminar usuario */}
+            <ConfirmDialog
+                isOpen={confirmUserDlg.isOpen}
+                onClose={() => setConfirmUserDlg({ isOpen: false })}
+                onConfirm={async () => {
+                    try {
+                        if (!confirmUserDlg.userId) return;
+                        const res = await usersApi.delete(confirmUserDlg.userId);
+                        if (res.success) { toast({ title: 'Usuario eliminado', status: 'success', duration: 1500 }); setConfirmUserDlg({ isOpen: false }); void loadUsuarios(selectedDespachoId); }
+                    } catch {
+                        toast({ title: 'No se pudo eliminar', status: 'error', duration: 2000 });
+                    }
+                }}
+                title="Eliminar usuario"
+                message={`¿Seguro que deseas eliminar a "${confirmUserDlg.name ?? ''}"? Esta acción no se puede deshacer.`}
+                confirmText="Eliminar"
+                type="warning"
+            />
 
             {/* Modal Crear Tema */}
             <Modal isOpen={temaModal.isOpen} onClose={temaModal.onClose} isCentered size="sm">

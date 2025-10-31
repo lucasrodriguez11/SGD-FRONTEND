@@ -1,11 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Box, Button, Container, Heading, Table, Tbody, Td, Th, Thead, Tr, useDisclosure, useToast, Flex, Text, Badge, Grid, GridItem, Input, useColorModeValue } from '@chakra-ui/react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Box, Button, Container, Heading, Table, Tbody, Td, Th, Thead, Tr, useDisclosure, Flex, Text, Badge, Grid, GridItem, Input, useColorModeValue } from '@chakra-ui/react';
 import { BackBar } from '~/components/Layout/BackBar';
 import { authUser, expedientesApi, type Expediente } from '~/services/api';
 import { MovimientoModal } from '~/components/Expedientes/MovimientoModal';
 
 const ArchivadosPage: React.FC = () => {
-  const toast = useToast();
   const [rows, setRows] = useState<Expediente[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);

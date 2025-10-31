@@ -85,11 +85,7 @@ const ExpedientesPage: React.FC = () => {
     onDrawerOpen();
   }, [fetchMovimientos, onDrawerOpen]);
 
-  const handleViewHistory = useCallback(async (expediente: Expediente) => {
-    setSelectedExpediente(expediente);
-    await fetchMovimientos(expediente._id);
-    onDrawerOpen();
-  }, [fetchMovimientos, onDrawerOpen]);
+  // (onViewHistory eliminado; se usa onViewExpediente)
 
   // Efecto para cargar datos iniciales
   useEffect(() => {
@@ -128,7 +124,6 @@ const ExpedientesPage: React.FC = () => {
           currentPage={currentPage}
           onPageChange={setCurrentPage}
           onViewExpediente={handleViewExpediente}
-          onViewHistory={handleViewHistory}
         />
       </GridItem>
 

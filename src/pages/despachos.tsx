@@ -6,7 +6,6 @@ import {
     useDisclosure,
     Flex,
     Button,
-    Heading,
     Box,
     useColorModeValue,
 } from '@chakra-ui/react';

@@ -53,7 +53,7 @@ const ConfiguracionPage: React.FC = () => {
                     <TabPanel>
                         <VStack spacing={4} align="stretch">
                             <Box display="flex" alignItems="center" gap={4}>
-                                <Avatar name={name || 'Usuario'} />
+                                <Avatar name={name ?? 'Usuario'} />
                                 <Text color="gray.500">Actualiza tu información</Text>
                             </Box>
                             <FormControl>
@@ -81,7 +81,7 @@ const ConfiguracionPage: React.FC = () => {
                                 try {
                                     const res = await usersApi.meUpdate({ name, email });
                                     if (res.success && res.data?.user) {
-                                        const prev = authUser.get() || {};
+                                        const prev = authUser.get() ?? {};
                                         authUser.set({ ...prev, ...res.data.user });
                                         toast({ title: 'Perfil actualizado', status: 'success', duration: 2000 });
                                     }
@@ -89,7 +89,7 @@ const ConfiguracionPage: React.FC = () => {
                                         const ch = await usersApi.changePassword({ currentPassword: currentPass, newPassword: newPass });
                                         if (ch.success) toast({ title: 'Contraseña actualizada', status: 'success', duration: 2000 });
                                     }
-                                } catch (e) {
+                                } catch {
                                     toast({ title: 'No se pudo guardar', status: 'error', duration: 2500 });
                                 }
                             }}>Guardar</Button>
@@ -99,7 +99,7 @@ const ConfiguracionPage: React.FC = () => {
                         <VStack spacing={4} align="stretch">
                             <Heading size="sm">Perfil de Despacho</Heading>
                             <Box display="flex" alignItems="center" gap={4}>
-                                <Avatar name={despacho?.nombre || 'Despacho'} bg="green.300" />
+                                <Avatar name={despacho?.nombre ?? 'Despacho'} bg="green.300" />
                                 <Text color="gray.500">Este avatar se usa en el Perfil del despacho</Text>
                             </Box>
                             <FormControl>
@@ -134,10 +134,10 @@ const ConfiguracionPage: React.FC = () => {
                                 try {
                                     if (!user?.despachoId || !despacho) return;
                                     const payload: Partial<CreateDespachoDto> & { descripcion?: string } = {
-                                        responsable: resp || undefined,
-                                        email: dEmail || undefined,
-                                        telefono: tel || undefined,
-                                        descripcion: desc || undefined,
+                                        responsable: resp ?? undefined,
+                                        email: dEmail ?? undefined,
+                                        telefono: tel ?? undefined,
+                                        descripcion: desc ?? undefined,
                                     };
                                     const res = await despachosApi.update(user.despachoId, payload);
                                     if (res.success) {

@@ -10,7 +10,7 @@ import {
     TabPanel,
     TabPanels,
     Tabs,
-    Text,
+    
     VStack,
     Badge,
     HStack,
@@ -24,7 +24,7 @@ import {
     Flex,
     useToast,
 } from '@chakra-ui/react';
-import { authUser, despachosApi, expedientesApi, movimientosApi, usersApi, type Expediente, type Movimiento, type UserDTO, type Despacho } from '~/services/api';
+import { authUser, despachosApi, expedientesApi, movimientosApi, usersApi, type Expediente, type Movimiento, type UserDTO, type Despacho, type CreateMovimientoDto } from '~/services/api';
 import { useRouter } from 'next/router';
 import { BackBar } from '~/components/Layout/BackBar';
 import { MessageSquare, Send, Archive } from 'lucide-react';
@@ -61,7 +61,7 @@ const PerfilPage: React.FC = () => {
         const load = async () => {
             const u = authUser.get<UserDTO>();
             if (u) setUser(u);
-            const targetId = queryDespacho || u?.despachoId;
+            const targetId = queryDespacho ?? u?.despachoId;
             if (!targetId) return;
 
             const res = await despachosApi.getById(targetId);
@@ -72,7 +72,7 @@ const PerfilPage: React.FC = () => {
         void load();
     }, [queryDespacho]);
 
-    const targetDespachoId = queryDespacho || user?.despachoId;
+    const targetDespachoId = queryDespacho ?? user?.despachoId;
 
     const loadExpedientes = useCallback(async () => {
         if (!targetDespachoId) return;
@@ -82,7 +82,7 @@ const PerfilPage: React.FC = () => {
             if (res.success && res.data) {
                 setExpedientes(res.data.expedientes);
             }
-        } catch (error) {
+        } catch {
             toast({ title: 'Error al cargar expedientes', status: 'error', duration: 2000 });
         } finally {
             setLoading(prev => ({ ...prev, expedientes: false }));
@@ -97,7 +97,7 @@ const PerfilPage: React.FC = () => {
             if (res.success && res.data) {
                 setEnviados(res.data.movimientos);
             }
-        } catch (error) {
+        } catch {
             toast({ title: 'Error al cargar enviados', status: 'error', duration: 2000 });
         } finally {
             setLoading(prev => ({ ...prev, enviados: false }));
@@ -112,7 +112,7 @@ const PerfilPage: React.FC = () => {
             if (res.success && res.data) {
                 setRecepcionados(res.data.movimientos);
             }
-        } catch (error) {
+        } catch {
             toast({ title: 'Error al cargar recepcionados', status: 'error', duration: 2000 });
         } finally {
             setLoading(prev => ({ ...prev, recepcionados: false }));
@@ -127,7 +127,7 @@ const PerfilPage: React.FC = () => {
             if (res.success && res.data) {
                 setArchivados(res.data.expedientes);
             }
-        } catch (error) {
+        } catch {
             toast({ title: 'Error al cargar archivados', status: 'error', duration: 2000 });
         } finally {
             setLoading(prev => ({ ...prev, archivados: false }));
@@ -142,14 +142,14 @@ const PerfilPage: React.FC = () => {
             if (res.success && res.data) {
                 setUsuarios(res.data.users);
             }
-        } catch (error) {
+        } catch {
             toast({ title: 'Error al cargar usuarios', status: 'error', duration: 2000 });
         } finally {
             setLoading(prev => ({ ...prev, usuarios: false }));
         }
     }, [targetDespachoId, toast]);
 
-    const handleEnviarSubmit = async (data: { expedienteId: string; despachoNuevo: string; fojasAgregadas: number; estado: 'RECEPCIONADO' | 'ENVIADO' | 'ARCHIVADO'; observaciones?: string; usuarioResponsable?: string }) => {
+    const handleEnviarSubmit = async (data: CreateMovimientoDto) => {
         try {
             await movimientosApi.create(data);
             toast({ title: 'Expediente enviado', status: 'success', duration: 2000 });
@@ -445,7 +445,7 @@ const PerfilPage: React.FC = () => {
             </Tabs>
         </Container>
         {/* Modal Enviar Expediente */}
-        <MovimientoModal isOpen={isMovOpen} onClose={closeEnviar} onSubmit={handleEnviarSubmit as any} expedientes={expedientes} initialExpedienteId={selectedExpId ?? undefined} />
+        <MovimientoModal isOpen={isMovOpen} onClose={closeEnviar} onSubmit={handleEnviarSubmit} expedientes={expedientes} initialExpedienteId={selectedExpId ?? undefined} />
         </>
     );
 };
