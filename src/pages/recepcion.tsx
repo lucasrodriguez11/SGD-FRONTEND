@@ -8,7 +8,7 @@ type TokenPayload = { userId: string; role: 'ADMIN' | 'USER'; despachoId?: strin
 
 const RecepcionPage: React.FC = () => {
     const toast = useToast();
-    const [rows, setRows] = useState<Array<{ _id: string; expedienteId: string; despachoOrigenId: string; despachoDestinoId: string; fechaEnvio: string }>>([]);
+    const [rows, setRows] = useState<Array<{ _id: string; expedienteId: string; despachoOrigenId: string; despachoDestinoId: string; fechaEnvio: string | Date }>>([]);
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -72,7 +72,12 @@ const RecepcionPage: React.FC = () => {
                                     <Tr><Td colSpan={4}><Flex justify="center" py={6}><Spinner /></Flex></Td></Tr>
                                 )}
                                 {!loading && rows
-                                    .filter(r => r.expedienteId.includes(search) || r.despachoOrigenId.toLowerCase().includes(search.toLowerCase()))
+                                    .filter(r => {
+                                        if (!search.trim()) return true;
+                                        const searchLower = search.toLowerCase();
+                                        return String(r.expedienteId).toLowerCase().includes(searchLower) ||
+                                               String(r.despachoOrigenId).toLowerCase().includes(searchLower);
+                                    })
                                     .map(r => (
                                         <Tr key={r._id}>
                                             <Td>

@@ -186,6 +186,14 @@ apiClient.interceptors.response.use(
         return response;
     },
     (error: AxiosError<ApiResponse>) => {
+        // Handle 401 Unauthorized - redirect to login
+        if (error.response?.status === 401) {
+            if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+                authToken.clear();
+                authUser.clear();
+                window.location.href = '/login';
+            }
+        }
         // Handle errors globally
         if (error.response) {
             const errorMessage =

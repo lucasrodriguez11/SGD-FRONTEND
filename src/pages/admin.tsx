@@ -133,7 +133,11 @@ const AdminPage: React.FC = () => {
                 toast({ title: 'Usuario creado', status: 'success', duration: 2000 });
                 userModal.onClose();
                 setUName(''); setUEmail(''); setUPass(''); setUDesp(''); setURole('USER');
-                if (uDesp) void loadUsuarios(uDesp);
+                // Recargar usuarios del despacho seleccionado
+                const targetDesp = uDesp || selectedDespachoId;
+                if (targetDesp) {
+                    await loadUsuarios(targetDesp);
+                }
             }
         } catch {
             toast({ title: 'Error al crear usuario', status: 'error', duration: 2500 });
@@ -202,6 +206,9 @@ const AdminPage: React.FC = () => {
 
     const cardBg = useColorModeValue('white', 'gray.900');
     const border = useColorModeValue('gray.200', 'gray.700');
+    const activeBg = useColorModeValue('blue.50', 'blue.900');
+    const activeBorder = useColorModeValue('blue.400', 'blue.600');
+    const activeText = useColorModeValue('blue.700', 'blue.200');
 
     if (!isAdmin) return null;
 
@@ -214,15 +221,15 @@ const AdminPage: React.FC = () => {
                     justify="space-between"
                     p={6}
                     borderRadius="lg"
-                    bg={activePanel === 'despachos' ? 'blue.50' : cardBg}
+                    bg={activePanel === 'despachos' ? activeBg : cardBg}
                     borderWidth="1px"
-                    borderColor={activePanel === 'despachos' ? 'blue.400' : border}
+                    borderColor={activePanel === 'despachos' ? activeBorder : border}
                     shadow="sm"
                     cursor="pointer"
                     _hover={{ transform: 'translateY(-2px)', shadow: 'md' }}
                     onClick={() => { setActivePanel('despachos'); void fetchDespachos(1, {}); }}
                 >
-                    <Flex align="center" gap={3}><Icon as={Building2} color="blue.500" /> <Text fontWeight="bold">Despachos</Text></Flex>
+                    <Flex align="center" gap={3}><Icon as={Building2} color={activePanel === 'despachos' ? activeText : 'blue.500'} /> <Text fontWeight="bold" color={activePanel === 'despachos' ? activeText : undefined}>Despachos</Text></Flex>
                     <Badge colorScheme="blue">GESTIONAR</Badge>
                 </Flex>
 
@@ -231,15 +238,15 @@ const AdminPage: React.FC = () => {
                     justify="space-between"
                     p={6}
                     borderRadius="lg"
-                    bg={activePanel === 'usuarios' ? 'blue.50' : cardBg}
+                    bg={activePanel === 'usuarios' ? activeBg : cardBg}
                     borderWidth="1px"
-                    borderColor={activePanel === 'usuarios' ? 'blue.400' : border}
+                    borderColor={activePanel === 'usuarios' ? activeBorder : border}
                     shadow="sm"
                     cursor="pointer"
                     _hover={{ transform: 'translateY(-2px)', shadow: 'md' }}
                     onClick={() => { setActivePanel('usuarios'); void loadDespachos(); if (selectedDespachoId) void loadUsuarios(selectedDespachoId); }}
                 >
-                    <Flex align="center" gap={3}><Icon as={UsersIcon} color="blue.500" /> <Text fontWeight="bold">Usuarios</Text></Flex>
+                    <Flex align="center" gap={3}><Icon as={UsersIcon} color={activePanel === 'usuarios' ? activeText : 'blue.500'} /> <Text fontWeight="bold" color={activePanel === 'usuarios' ? activeText : undefined}>Usuarios</Text></Flex>
                     <Badge colorScheme="blue">GESTIONAR</Badge>
                 </Flex>
 
@@ -248,15 +255,15 @@ const AdminPage: React.FC = () => {
                     justify="space-between"
                     p={6}
                     borderRadius="lg"
-                    bg={activePanel === 'temas' ? 'blue.50' : cardBg}
+                    bg={activePanel === 'temas' ? activeBg : cardBg}
                     borderWidth="1px"
-                    borderColor={activePanel === 'temas' ? 'blue.400' : border}
+                    borderColor={activePanel === 'temas' ? activeBorder : border}
                     shadow="sm"
                     cursor="pointer"
                     _hover={{ transform: 'translateY(-2px)', shadow: 'md' }}
                     onClick={() => { setActivePanel('temas'); void loadTemas(); }}
                 >
-                    <Flex align="center" gap={3}><Icon as={Tag} color="blue.500" /> <Text fontWeight="bold">Temas</Text></Flex>
+                    <Flex align="center" gap={3}><Icon as={Tag} color={activePanel === 'temas' ? activeText : 'blue.500'} /> <Text fontWeight="bold" color={activePanel === 'temas' ? activeText : undefined}>Temas</Text></Flex>
                     <Badge colorScheme="blue">GESTIONAR</Badge>
                 </Flex>
             </SimpleGrid>
@@ -281,13 +288,15 @@ const AdminPage: React.FC = () => {
                                 </FormControl>
                                 <FormControl mb={4}>
                                     <FormLabel>Despacho</FormLabel>
-                                    <Select placeholder="Selecciona despacho" value={userFilters.despachoId ?? ''} onChange={(e) => {
-                                        const id = e.target.value; setUserFilters((f) => ({ ...f, despachoId: id })); setSelectedDespachoId(id); void loadUsuarios(id);
+                                    <Select placeholder="Selecciona despacho" value={selectedDespachoId} onChange={(e) => {
+                                        const id = e.target.value; 
+                                        setSelectedDespachoId(id);
+                                        setUserFilters((f) => ({ ...f, despachoId: id }));
+                                        if (id) void loadUsuarios(id);
                                     }}>
                                         {despachos.map((d) => (<option key={d._id} value={d._id}>{d.tipo} - {d.nombre}</option>))}
                                     </Select>
                                 </FormControl>
-                                <Button w="full" colorScheme="blue" onClick={() => { if (userFilters.despachoId) void loadUsuarios(userFilters.despachoId); }}>Aplicar Filtros</Button>
                             </Box>
                         </GridItem>
                         <GridItem minW={0}>

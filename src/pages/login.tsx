@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Box, Button, FormControl, FormLabel, Heading, Input, SimpleGrid, Tab, TabList, TabPanel, TabPanels, Tabs, useToast } from '@chakra-ui/react';
+import { Box, Button, FormControl, FormLabel, Heading, Input, SimpleGrid, Tab, TabList, TabPanel, TabPanels, Tabs, useToast, Flex, useColorModeValue } from '@chakra-ui/react';
+import Image from 'next/image';
 import { authApi, authToken, authUser } from '~/services/api';
 import type { AxiosError } from 'axios';
 import { useRouter } from 'next/router';
@@ -64,26 +65,45 @@ const LoginPage: React.FC = () => {
 
     // Registro deshabilitado
 
+    const bgGradientLight = 'linear(to-br, whiteAlpha.900, gray.50)';
+    const bgGradientDark = 'linear(to-br, gray.900, gray.800)';
+    const pageBg = useColorModeValue(bgGradientLight, bgGradientDark);
+    const cardBg = useColorModeValue('white', 'gray.800');
+    const headingColor = useColorModeValue('gray.700', 'gray.200');
+    const tabBg = useColorModeValue('blue.50', 'gray.700');
+    const tabSelectedBg = useColorModeValue('blue.100', 'blue.600');
+    const tabSelectedColor = useColorModeValue('blue.800', 'white');
+
     return (
-        <Box minH="100vh" bgGradient="linear(to-b, blue.50, white)" display="flex" alignItems="center" justifyContent="center" px={4}>
-            <Box w="full" maxW="520px" bg="white" borderRadius="3xl" boxShadow="2xl" p={8}>
-                <Heading textAlign="center" mb={6} fontWeight="extrabold">Bienvenido</Heading>
+        <Box
+            minH="100vh"
+            bgGradient={pageBg}
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            px={4}
+        >
+            <Box w="full" maxW="520px" bg={cardBg} borderRadius="2xl" boxShadow="xl" p={8}>
+                <Flex justify="center" mb={4}>
+                    <Image src="/logo-sgd.png" alt="SGD" width={180} height={180} priority />
+                </Flex>
+                <Heading size="md" textAlign="center" mb={4} fontWeight="semibold" color={headingColor}>Bienvenido</Heading>
 
                 <Tabs isFitted variant="enclosed" mb={4}>
                     <TabList>
-                        <Tab bg="blue.50" _selected={{ bg: 'blue.100', color: 'blue.800' }} borderTopLeftRadius="md" borderTopRightRadius="md">Ingresar</Tab>
-                        <Tab bg="blue.50" _selected={{ bg: 'blue.100', color: 'blue.800' }} borderTopLeftRadius="md" borderTopRightRadius="md">Crear cuenta</Tab>
+                        <Tab bg={tabBg} _selected={{ bg: tabSelectedBg, color: tabSelectedColor }} borderTopLeftRadius="md" borderTopRightRadius="md">Ingresar</Tab>
+                        <Tab bg={tabBg} _selected={{ bg: tabSelectedBg, color: tabSelectedColor }} borderTopLeftRadius="md" borderTopRightRadius="md">Crear cuenta</Tab>
                     </TabList>
                     <TabPanels>
                         <TabPanel px={0}>
                             <SimpleGrid columns={1} spacing={4}>
                                 <FormControl>
                                     <FormLabel>Email</FormLabel>
-                                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="user@admin.com" size="lg" borderRadius="lg" />
+                                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Ingrese su email" size="lg" borderRadius="lg" />
                                 </FormControl>
                                 <FormControl>
                                     <FormLabel>Contraseña</FormLabel>
-                                    <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••" size="lg" borderRadius="lg" />
+                                    <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Ingrese su contraseña" size="lg" borderRadius="lg" />
                                 </FormControl>
                                 <Button colorScheme="blue" size="lg" borderRadius="lg" onClick={handleLogin}>Ingresar</Button>
                             </SimpleGrid>

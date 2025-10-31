@@ -19,8 +19,10 @@ import {
   VStack,
   useBreakpointValue,
 } from '@chakra-ui/react';
+import { useColorMode } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import { authToken, authUser, notificationsApi } from '~/services/api';
+import Image from 'next/image';
 import { connectNotifications, type NotificationWS } from '~/services/ws';
 import {
   Menu as MenuIcon,
@@ -29,6 +31,8 @@ import {
   Settings,
   LogOut,
   ChevronDown,
+  Moon,
+  Sun,
 } from 'lucide-react';
 
 interface NavItem {
@@ -43,6 +47,7 @@ export const Navbar: React.FC = () => {
   const router = useRouter();
   const { isOpen, onToggle } = useDisclosure();
   const isMobile = useBreakpointValue({ base: true, md: false });
+  const { colorMode, toggleColorMode } = useColorMode();
   const [displayName, setDisplayName] = React.useState<string>('Usuario');
   const [notifUnread, setNotifUnread] = React.useState<number>(0);
   const [notifOpen, setNotifOpen] = React.useState<boolean>(false);
@@ -157,24 +162,7 @@ export const Navbar: React.FC = () => {
               />
             )}
             <Flex align="center" cursor="pointer" onClick={() => handleNavigation('/')}>
-              <Text
-                fontSize="xl"
-                fontWeight="bold"
-                bgGradient="linear(to-r, white, blue.100)"
-                bgClip="text"
-                letterSpacing="tight"
-              >
-                SGDM
-              </Text>
-              <Badge
-                ml={2}
-                colorScheme="blue"
-                variant="solid"
-                fontSize="xs"
-                borderRadius="full"
-              >
-                v2
-              </Badge>
+              <Image src="/logo-sgd.png" alt="SGD" width={48} height={48} priority />
             </Flex>
           </HStack>
 
@@ -211,7 +199,7 @@ export const Navbar: React.FC = () => {
 
             {/* Notifications dropdown */}
             <Menu isOpen={notifOpen} onClose={() => setNotifOpen(false)}>
-              <MenuButton as={IconButton} aria-label="Notificaciones" icon={<Bell />} variant="ghost" colorScheme="whiteAlpha" onClick={() => { const opening = !notifOpen; setNotifOpen(opening); if (opening) { setNotifUnread(0); localStorage.setItem('notif_unread', '0'); } }} position="relative">
+              <MenuButton as={IconButton} aria-label="Notificaciones" icon={<Bell color="white" />} variant="ghost" colorScheme="whiteAlpha" onClick={() => { const opening = !notifOpen; setNotifOpen(opening); if (opening) { setNotifUnread(0); localStorage.setItem('notif_unread', '0'); } }} position="relative">
                 {notifUnread > 0 && (
                   <Badge position="absolute" top="2px" right="2px" colorScheme="red" borderRadius="full">{notifUnread}</Badge>
                 )}
@@ -255,20 +243,23 @@ export const Navbar: React.FC = () => {
               </MenuList>
             </Menu>
 
+            {/* Theme toggle */}
+            <IconButton aria-label="Cambiar tema" icon={colorMode === 'light' ? <Moon color="white" /> : <Sun color="white" />} variant="ghost" colorScheme="whiteAlpha" onClick={toggleColorMode} />
+
             {/* User Menu */}
             <Menu>
               <MenuButton
                 as={Button}
                 variant="ghost"
                 colorScheme="whiteAlpha"
-                rightIcon={<ChevronDown size={16} />}
+                rightIcon={<ChevronDown size={16} color="white" />}
                 _hover={{ bg: hoverBg }}
                 px={2}
               >
                 <HStack spacing={2}>
                   <Avatar size="sm" name={displayName} bg="blue.300" />
                   <Box display={{ base: 'none', md: 'block' }}>
-                    <Text size="sm" fontWeight="medium">{displayName}</Text>
+                    <Text size="sm" fontWeight="medium" color="white">{displayName}</Text>
                   </Box>
                 </HStack>
               </MenuButton>
