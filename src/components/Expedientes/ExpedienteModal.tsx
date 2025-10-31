@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Modal,
   ModalOverlay,
@@ -13,9 +13,12 @@ import {
   Textarea,
   Button,
   VStack,
-  useToast
+  useToast,
+  Switch,
+  HStack
 } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
+import { despachosApi, temasApi, type Despacho, type Tema } from '~/services/api';
 
 
 // Tipos para el formulario
@@ -27,14 +30,10 @@ interface ExpedienteForm {
   extracto?: string;
   fojas: number;
   despachoActual: string;
+  fechaVencimiento?: string;
 }
 
-// Lista de temas disponibles
-const TEMAS = [
-  'BARRIDO', 'DESMALEZAMIENTO', 'INSPECCION', 'PODA', 
-  'CORTE AL RAS', 'LIMPIEZA', 'REPARACION', 'PLANITES/ARBOL',
-  'COLABORACION - DONACION', 'EVENTOS', 'RRHH'
-];
+// Eliminado: los temas se cargan dinámicamente
 
 interface Props {
   isOpen: boolean;
@@ -49,16 +48,35 @@ export const ExpedienteModal: React.FC<Props> = ({
   onSubmit,
   expedienteInicial
 }) => {
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<ExpedienteForm>({
+  const { register, handleSubmit, formState: { isSubmitting } } = useForm<ExpedienteForm>({
     defaultValues: expedienteInicial
   });
   const toast = useToast();
+
+  const [despachos, setDespachos] = useState<Despacho[]>([]);
+  const [temas, setTemas] = useState<Tema[]>([]);
+  const [enableVenc, setEnableVenc] = useState(false);
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await despachosApi.getActivos();
+        if (res.success && res.data) setDespachos(res.data.despachos);
+      } catch {
+        // ignore
+      }
+      try {
+        const t = await temasApi.list();
+        if (t.success && t.data) setTemas(t.data.temas);
+      } catch { }
+    };
+    if (isOpen) void load();
+  }, [isOpen]);
 
   const onSubmitForm = async (data: ExpedienteForm) => {
     try {
       await onSubmit(data);
       onClose();
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error al guardar',
         status: 'error',
@@ -68,11 +86,11 @@ export const ExpedienteModal: React.FC<Props> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
+    <Modal isOpen={isOpen} onClose={onClose} size="lg">
       <ModalOverlay />
-      <ModalContent>
+      <ModalContent maxW={{ base: '95%', md: '720px' }} mx={{ base: 2, md: 0 }}>
         <ModalHeader>
-          {expedienteInicial ? 'Editar Expediente' : 'Nuevo Expediente'}
+          {expedienteInicial ? 'Editar Expediente' : 'Registrar Expediente'}
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
@@ -96,9 +114,9 @@ export const ExpedienteModal: React.FC<Props> = ({
 
               <FormControl isRequired>
                 <FormLabel>Tema</FormLabel>
-                <Select {...register('tema', { required: true })}>
-                  {TEMAS.map(tema => (
-                    <option key={tema} value={tema}>{tema}</option>
+                <Select {...register('tema', { required: true })} placeholder="Selecciona un tema">
+                  {temas.map((t) => (
+                    <option key={t._id} value={t.nombre}>{t.nombre}</option>
                   ))}
                 </Select>
               </FormControl>
@@ -124,16 +142,30 @@ export const ExpedienteModal: React.FC<Props> = ({
                 <FormLabel>Fojas</FormLabel>
                 <Input
                   type="number"
-                  {...register('fojas', { required: true, min: 0 })}
+                  {...register('fojas', { required: true, min: 0, valueAsNumber: true })}
                 />
               </FormControl>
 
               <FormControl isRequired>
                 <FormLabel>Despacho Actual</FormLabel>
-                <Input
-                  {...register('despachoActual', { required: true })}
-                  placeholder="Área o despacho actual"
-                />
+                <Select {...register('despachoActual', { required: true })} placeholder="Selecciona un despacho">
+                  {despachos.map((d) => (
+                    <option key={d._id} value={d.nombre}>{d.tipo} - {d.nombre}</option>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl>
+                <HStack justify="space-between" mb={1}>
+                  <FormLabel m={0}>Vencimiento</FormLabel>
+                  <HStack spacing={2}>
+                    <Switch size="sm" isChecked={enableVenc} onChange={(e) => setEnableVenc(e.target.checked)} />
+                    <FormLabel m={0} fontSize="sm">Activar</FormLabel>
+                  </HStack>
+                </HStack>
+                {enableVenc && (
+                  <Input type="date" {...register('fechaVencimiento')} />
+                )}
               </FormControl>
 
               <Button
@@ -143,7 +175,7 @@ export const ExpedienteModal: React.FC<Props> = ({
                 isLoading={isSubmitting}
                 mt={4}
               >
-                {expedienteInicial ? 'Actualizar' : 'Crear'}
+                {expedienteInicial ? 'Actualizar' : 'Registrar'}
               </Button>
             </VStack>
           </form>

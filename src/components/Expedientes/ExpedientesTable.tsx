@@ -6,27 +6,24 @@ import {
   Tr,
   Th,
   Td,
-  IconButton,
   Box,
   Text,
   Badge,
   Flex,
   Button,
-  useDisclosure,
   Spinner,
-  Select,
-  Heading,
-  HStack,
   VStack,
   useColorModeValue,
+  HStack,
+  IconButton,
   Menu,
   MenuButton,
   MenuList,
-  MenuItem
+  MenuItem,
 } from '@chakra-ui/react';
-import { FaEye, FaHistory, FaEllipsisV } from 'react-icons/fa';
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
-import { Expediente } from 'src/types';
+import { FaEllipsisV, FaEye } from 'react-icons/fa';
+import type { Expediente } from '~/services/api';
 
 interface ExpedientesTableProps {
   expedientes: Expediente[];
@@ -34,8 +31,7 @@ interface ExpedientesTableProps {
   totalPages: number;
   currentPage: number;
   onPageChange: (page: number) => void;
-  onViewExpediente: (expediente: Expediente) => void;
-  onViewHistory: (expediente: Expediente) => void;
+  onViewExpediente?: (expediente: Expediente) => void;
 }
 
 export const ExpedientesTable: React.FC<ExpedientesTableProps> = ({
@@ -45,7 +41,6 @@ export const ExpedientesTable: React.FC<ExpedientesTableProps> = ({
   currentPage,
   onPageChange,
   onViewExpediente,
-  onViewHistory
 }) => {
   const bgColor = useColorModeValue('white', 'gray.800');
   const headerBgColor = useColorModeValue('gray.50', 'gray.700');
@@ -54,13 +49,13 @@ export const ExpedientesTable: React.FC<ExpedientesTableProps> = ({
 
   const PrioridadBadge = ({ prioridad }: { prioridad: string }) => {
     const colorScheme = {
-      'Alta': 'red',
-      'Normal': 'yellow',
-      'Baja': 'green'
-    }[prioridad];
+      Alta: 'red',
+      Normal: 'blue',
+      Baja: 'gray',
+    }[prioridad] ?? 'gray';
 
     return (
-      <Badge 
+      <Badge
         colorScheme={colorScheme}
         px={3}
         py={1}
@@ -74,20 +69,46 @@ export const ExpedientesTable: React.FC<ExpedientesTableProps> = ({
     );
   };
 
-  const TableActions = ({ expediente }: { expediente: Expediente }) => (
-    <Menu>
-       <MenuItem 
-          icon={<FaEye />} 
-          onClick={() => onViewExpediente(expediente)}
-        >
-        </MenuItem>
-        <MenuItem 
-          icon={<FaHistory />} 
-          onClick={() => onViewHistory(expediente)}
-        >
-        </MenuItem>
-    </Menu>
-  );
+  const EstadoBadge = ({ estado }: { estado: string }) => {
+    const colorScheme = {
+      RECEPCIONADO: 'blue',
+      ENVIADO: 'orange',
+      ARCHIVADO: 'gray',
+    }[estado] ?? 'gray';
+
+    return (
+      <Badge
+        colorScheme={colorScheme}
+        px={3}
+        py={1}
+        borderRadius="full"
+        textTransform="none"
+        fontSize="sm"
+        fontWeight="medium"
+      >
+        {estado}
+      </Badge>
+    );
+  };
+
+  const TableActions = ({ expediente }: { expediente: Expediente }) => {
+    return (
+      <Menu>
+        <MenuButton
+          as={IconButton}
+          icon={<FaEllipsisV />}
+          variant="ghost"
+          size="sm"
+          aria-label="Acciones"
+        />
+        <MenuList>
+          <MenuItem icon={<FaEye />} onClick={() => onViewExpediente?.(expediente)}>
+            Ver Detalles
+          </MenuItem>
+        </MenuList>
+      </Menu>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -100,140 +121,129 @@ export const ExpedientesTable: React.FC<ExpedientesTableProps> = ({
     );
   }
 
-  return (
-    <Box>
-      <Flex justify="space-between" align="center" mb={6}>
-        <Heading size="md">Expedientes</Heading>
-        <HStack spacing={4}>
-          <Text color="gray.500" fontSize="sm">
-            Total: {expedientes.length} expedientes
+  if (expedientes.length === 0) {
+    return (
+      <Flex justify="center" align="center" h="400px">
+        <VStack spacing={4}>
+          <Text fontSize="4xl">📭</Text>
+          <Text color="gray.500" fontSize="lg">
+            No hay expedientes registrados
           </Text>
-        </HStack>
+        </VStack>
       </Flex>
+    );
+  }
 
-      <Box 
-        borderWidth="1px"
-        borderRadius="lg"
-        overflow="hidden"
-        backgroundColor={bgColor}
-        borderColor={borderColor}
-        boxShadow="sm"
-      >
+  return (
+    <Box bg={bgColor} borderRadius="2xl" shadow="lg" overflow="hidden">
+      <Box overflowX="auto">
         <Table variant="simple">
-          <Thead backgroundColor={headerBgColor}>
+          <Thead bg={headerBgColor}>
             <Tr>
-              <Th 
-                py={4}
-                borderBottomWidth="2px" 
-                borderBottomColor="blue.500"
-              >
-                Nro de Expediente
+              <Th borderColor={borderColor} fontSize="sm" fontWeight="bold">
+                N° Expediente
               </Th>
-              <Th 
-                borderBottomWidth="2px" 
-                borderBottomColor="blue.500"
-              >
+              <Th borderColor={borderColor} fontSize="sm" fontWeight="bold">
                 Iniciador
               </Th>
-              <Th 
-                borderBottomWidth="2px" 
-                borderBottomColor="blue.500"
-              >
+              <Th borderColor={borderColor} fontSize="sm" fontWeight="bold">
                 Tema
               </Th>
-              <Th 
-                borderBottomWidth="2px" 
-                borderBottomColor="blue.500"
-              >
+              <Th borderColor={borderColor} fontSize="sm" fontWeight="bold">
                 Prioridad
               </Th>
-              <Th 
-                textAlign="center"
-                borderBottomWidth="2px" 
-                borderBottomColor="blue.500"
-                
-              >
+              <Th borderColor={borderColor} fontSize="sm" fontWeight="bold">
+                Despacho Actual
+              </Th>
+              <Th borderColor={borderColor} fontSize="sm" fontWeight="bold">
+                Estado
+              </Th>
+              <Th borderColor={borderColor} fontSize="sm" fontWeight="bold">
+                Fojas
+              </Th>
+              <Th borderColor={borderColor} fontSize="sm" fontWeight="bold">
                 Acciones
               </Th>
             </Tr>
           </Thead>
           <Tbody>
             {expedientes.map((expediente) => (
-              <Tr 
+              <Tr
                 key={expediente._id}
                 _hover={{ bg: hoverBgColor }}
-                transition="background-color 0.2s"
-                cursor="pointer"
+                transition="background 0.2s"
               >
-                <Td fontWeight="medium">
-                  {expediente.numeroExpediente}
+                <Td borderColor={borderColor}>
+                  <Text fontWeight="bold" fontFamily="mono">
+                    {expediente.numeroExpediente}
+                  </Text>
                 </Td>
-                <Td>{expediente.iniciador}</Td>
-                <Td maxW="300px">
-                  <Text noOfLines={1}>{expediente.tema}</Text>
+                <Td borderColor={borderColor}>
+                  <Text fontWeight="semibold">{expediente.iniciador}</Text>
+                  {expediente.extracto && (
+                    <Text fontSize="sm" color="gray.500" noOfLines={1}>
+                      {expediente.extracto}
+                    </Text>
+                  )}
                 </Td>
-                <Td>
+                <Td borderColor={borderColor}>
+                  <Text fontSize="sm">{expediente.tema}</Text>
+                </Td>
+                <Td borderColor={borderColor}>
                   <PrioridadBadge prioridad={expediente.prioridad} />
                 </Td>
-                <Td>
-                  <Flex justify="center">
-                    <TableActions expediente={expediente} />
-                  </Flex>
+                <Td borderColor={borderColor}>
+                  <Text fontSize="sm">{expediente.despachoActual}</Text>
+                </Td>
+                <Td borderColor={borderColor}>
+                  <EstadoBadge estado={expediente.estado} />
+                </Td>
+                <Td borderColor={borderColor}>
+                  <Text fontFamily="mono">{expediente.fojas}</Text>
+                </Td>
+                <Td borderColor={borderColor}>
+                  <TableActions expediente={expediente} />
                 </Td>
               </Tr>
             ))}
           </Tbody>
         </Table>
-
-        <Box p={4} borderTopWidth="1px" borderColor={borderColor}>
-          <Flex 
-            justify="space-between" 
-            align="center" 
-            flexWrap="wrap"
-            gap={4}
-          >
-            <HStack spacing={4}>
-              <Select
-                w="100px"
-                size="sm"
-                borderRadius="md"
-                value={currentPage}
-                onChange={(e) => onPageChange(Number(e.target.value))}
-              >
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <option key={page} value={page}>
-                    {page}
-                  </option>
-                ))}
-              </Select>
-              <Text fontSize="sm" color="gray.600">
-                de {totalPages} páginas
-              </Text>
-            </HStack>
-
-            <HStack spacing={2}>
-              <Button
-                size="sm"
-                leftIcon={<ChevronLeftIcon />}
-                onClick={() => onPageChange(currentPage - 1)}
-                isDisabled={currentPage === 1}
-                variant="outline"
-              >
-                Anterior
-              </Button>
-              <Button
-                size="sm"
-                rightIcon={<ChevronRightIcon />}
-                onClick={() => onPageChange(currentPage + 1)}
-                isDisabled={currentPage === totalPages}
-                variant="outline"
-              >
-                Siguiente
-              </Button>
-            </HStack>
-          </Flex>
-        </Box>
       </Box>
+
+      {/* Paginación */}
+      {totalPages > 1 && (
+        <Flex
+          justify="space-between"
+          align="center"
+          p={4}
+          borderTop="1px"
+          borderColor={borderColor}
+        >
+          <Text fontSize="sm" color="gray.500">
+            Página {currentPage} de {totalPages}
+          </Text>
+          <HStack spacing={2}>
+            <Button
+              leftIcon={<ChevronLeftIcon />}
+              onClick={() => onPageChange(currentPage - 1)}
+              isDisabled={currentPage === 1}
+              size="sm"
+              borderRadius="lg"
+            >
+              Anterior
+            </Button>
+            <Button
+              rightIcon={<ChevronRightIcon />}
+              onClick={() => onPageChange(currentPage + 1)}
+              isDisabled={currentPage === totalPages}
+              size="sm"
+              borderRadius="lg"
+            >
+              Siguiente
+            </Button>
+          </HStack>
+        </Flex>
+      )}
     </Box>
   );
 };

@@ -12,13 +12,7 @@ import {
   Badge,
   Tooltip,
 } from '@chakra-ui/react';
-import {
-  Filter,
-  FileText,
-  User,
-  Flag,
-  AlertCircle,
-} from 'lucide-react';
+import { Filter, Flag, AlertCircle } from 'lucide-react';
 
 interface FiltrosExpedienteProps {
   onFilter: (filters: FilterParams) => void;
@@ -35,10 +29,13 @@ interface FilterParams {
   fechaHasta?: string;
 }
 
+// Temas sincronizados con el backend
 const TEMAS = [
-  'BARRIDO', 'DESMALEZAMIENTO', 'INSPECCION', 'PODA', 
-  'CORTE AL RAS', 'LIMPIEZA', 'REPARACION', 'PLANITES/ARBOL',
-  'COLABORACION - DONACION', 'EVENTOS', 'RRHH'
+  'PODA',
+  'LIMPIEZA',
+  'BACHEO',
+  'ZANJA',
+  'OTROS'
 ];
 
 export const FiltrosExpediente: React.FC<FiltrosExpedienteProps> = ({
@@ -72,7 +69,7 @@ export const FiltrosExpediente: React.FC<FiltrosExpedienteProps> = ({
   };
 
   return (
-    <Box 
+    <Box
       bg={bgColor}
       borderRadius="md"
       shadow="sm"
@@ -106,8 +103,8 @@ export const FiltrosExpediente: React.FC<FiltrosExpedienteProps> = ({
         <SimpleGrid columns={1} spacing={3}>
           <Tooltip label="Número de Expediente">
             <FormControl>
-              <Input 
-                value={filters.numeroExpediente || ''}
+              <Input
+                value={filters.numeroExpediente ?? ''}
                 onChange={(e) => handleFilterChange('numeroExpediente', e.target.value)}
                 placeholder="Nro. Expediente"
                 size="md"
@@ -117,8 +114,8 @@ export const FiltrosExpediente: React.FC<FiltrosExpedienteProps> = ({
 
           <Tooltip label="Iniciador">
             <FormControl>
-              <Input 
-                value={filters.iniciador || ''}
+              <Input
+                value={filters.iniciador ?? ''}
                 onChange={(e) => handleFilterChange('iniciador', e.target.value)}
                 placeholder="Iniciador"
                 size="md"
@@ -128,9 +125,9 @@ export const FiltrosExpediente: React.FC<FiltrosExpedienteProps> = ({
 
           <Tooltip label="Tema">
             <FormControl>
-              <Select 
+              <Select
                 placeholder="Tema"
-                value={filters.tema || ''}
+                value={filters.tema ?? ''}
                 onChange={(e) => handleFilterChange('tema', e.target.value)}
                 size="md"
               >
@@ -145,7 +142,7 @@ export const FiltrosExpediente: React.FC<FiltrosExpedienteProps> = ({
             <FormControl>
               <Select
                 placeholder="Prioridad"
-                value={filters.prioridad || ''}
+                value={filters.prioridad ?? ''}
                 onChange={(e) => handleFilterChange('prioridad', e.target.value)}
                 size="md"
                 icon={<Flag size={14} />}
@@ -161,7 +158,7 @@ export const FiltrosExpediente: React.FC<FiltrosExpedienteProps> = ({
             <FormControl>
               <Select
                 placeholder="Estado"
-                value={filters.estado || ''}
+                value={filters.estado ?? ''}
                 onChange={(e) => handleFilterChange('estado', e.target.value)}
                 size="md"
                 icon={<AlertCircle size={14} />}
@@ -177,7 +174,7 @@ export const FiltrosExpediente: React.FC<FiltrosExpedienteProps> = ({
               <FormControl>
                 <Input
                   type="date"
-                  value={filters.fechaDesde || ''}
+                  value={filters.fechaDesde ?? ''}
                   onChange={(e) => handleFilterChange('fechaDesde', e.target.value)}
                   size="md"
                 />
@@ -188,7 +185,7 @@ export const FiltrosExpediente: React.FC<FiltrosExpedienteProps> = ({
               <FormControl>
                 <Input
                   type="date"
-                  value={filters.fechaHasta || ''}
+                  value={filters.fechaHasta ?? ''}
                   onChange={(e) => handleFilterChange('fechaHasta', e.target.value)}
                   size="md"
                 />
