@@ -75,7 +75,7 @@ export const FiltrosExpediente: React.FC<FiltrosExpedienteProps> = ({
         >
             <VStack spacing={6} align="stretch">
                 <Heading size="md" fontWeight="bold">
-                    🔍 Filtros
+                    Filtros
                 </Heading>
 
                 <Divider />

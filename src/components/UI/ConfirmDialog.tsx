@@ -13,9 +13,9 @@ import {
     useColorModeValue,
     Box,
 } from '@chakra-ui/react';
-import { FaExclamationTriangle, FaCheckCircle, FaInfoCircle } from 'react-icons/fa';
+import { FaExclamationTriangle, FaCheckCircle, FaInfoCircle, FaTimesCircle } from 'react-icons/fa';
 
-export type ConfirmType = 'warning' | 'success' | 'info';
+export type ConfirmType = 'warning' | 'success' | 'info' | 'error';
 
 interface ConfirmDialogProps {
     isOpen: boolean;
@@ -49,6 +49,8 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                 return { icon: FaCheckCircle, color: 'green.500' };
             case 'info':
                 return { icon: FaInfoCircle, color: 'blue.500' };
+            case 'error':
+                return { icon: FaTimesCircle, color: 'red.500' };
             case 'warning':
             default:
                 return { icon: FaExclamationTriangle, color: 'orange.500' };
@@ -63,6 +65,8 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                 return 'green';
             case 'info':
                 return 'blue';
+            case 'error':
+                return 'red';
             case 'warning':
             default:
                 return 'orange';
@@ -123,6 +127,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         </Modal>
     );
 };
+
 
 
 

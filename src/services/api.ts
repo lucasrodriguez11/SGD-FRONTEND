@@ -46,6 +46,7 @@ export interface Movimiento {
     estado: 'RECEPCIONADO' | 'ENVIADO' | 'ARCHIVADO';
     observaciones?: string;
     usuarioResponsable?: string;
+    usuarioResponsableNombre?: string;
 }
 
 export interface CreateExpedienteDto {
@@ -285,6 +286,16 @@ export const expedientesApi = {
     },
 
     /**
+     * Delete expediente permanently (hard delete)
+     */
+    delete: async (id: string): Promise<ApiResponse<{ message: string }>> => {
+        const response = await apiClient.delete<ApiResponse<{ message: string }>>(
+            `expedientes/${id}/delete`
+        );
+        return response.data;
+    },
+
+    /**
      * Get expedientes statistics
      */
     getStats: async (): Promise<ApiResponse<ExpedienteStats>> => {
@@ -480,12 +491,22 @@ export const despachosApi = {
     },
 
     /**
-     * Deactivate despacho
+     * Deactivate despacho (soft delete)
      */
     delete: async (id: string): Promise<ApiResponse<{ message: string; despacho: Despacho }>> => {
         const response = await apiClient.delete<
             ApiResponse<{ message: string; despacho: Despacho }>
         >(`despachos/${id}`);
+        return response.data;
+    },
+
+    /**
+     * Delete despacho permanently (hard delete)
+     */
+    deletePermanently: async (id: string): Promise<ApiResponse<{ message: string }>> => {
+        const response = await apiClient.delete<ApiResponse<{ message: string }>>(
+            `despachos/${id}/delete`
+        );
         return response.data;
     },
 };
@@ -526,10 +547,15 @@ export interface Recepcion { _id: string; expedienteId: string; despachoOrigenId
 export const recepcionesApi = {
     pendingByDespacho: async (despachoDestinoId: string): Promise<ApiResponse<{ recepciones: Recepcion[] }>> => {
         const res = await apiClient.get<ApiResponse<{ recepciones: Recepcion[] }>>('recepciones/pending', { params: { despachoDestinoId } });
+        console.log('[API] pendingByDespacho raw response data:', res.data);
         return res.data;
     },
     confirm: async (id: string, userId: string): Promise<ApiResponse<{ recepcion: Recepcion }>> => {
         const res = await apiClient.patch<ApiResponse<{ recepcion: Recepcion }>>(`recepciones/${id}/confirm`, { userId });
+        return res.data;
+    },
+    reject: async (id: string): Promise<ApiResponse<{ message: string }>> => {
+        const res = await apiClient.post<ApiResponse<{ message: string }>>(`recepciones/${id}/reject`);
         return res.data;
     },
 };

@@ -15,6 +15,7 @@ function computeWsUrl(channel: string): string {
     }
 }
 export type NotificationWS = {
+    id?: string;
     type: string;
     message: string;
     expedienteId?: string;

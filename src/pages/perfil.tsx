@@ -318,11 +318,15 @@ const PerfilPage: React.FC = () => {
                                                         </Badge>
                                                     </Td>
                                                     <Td fontFamily="mono">{exp.fojas}</Td>
-                                                    {isOwnProfile && (
+                                                    {isOwnProfile && exp.estado !== 'ENVIADO' && (
                                                         <Td textAlign="right">
                                                             <HStack spacing={2} justify="flex-end">
-                                                                <Button size="sm" leftIcon={<Send size={14} />} onClick={() => openEnviar(exp._id)} colorScheme="blue" variant="outline">Enviar</Button>
-                                                                <Button size="sm" leftIcon={<Archive size={14} />} onClick={() => void handleArchivar(exp._id)} variant="outline">Archivar</Button>
+                                                                {exp.estado === 'RECEPCIONADO' && (
+                                                                    <Button size="sm" leftIcon={<Send size={14} />} onClick={() => openEnviar(exp._id)} colorScheme="blue" variant="outline">Enviar</Button>
+                                                                )}
+                                                                {exp.estado !== 'ARCHIVADO' && (
+                                                                    <Button size="sm" leftIcon={<Archive size={14} />} onClick={() => void handleArchivar(exp._id)} variant="outline">Archivar</Button>
+                                                                )}
                                                             </HStack>
                                                         </Td>
                                                     )}
