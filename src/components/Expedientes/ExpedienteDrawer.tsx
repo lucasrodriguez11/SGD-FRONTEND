@@ -32,8 +32,6 @@ export const ExpedienteDrawer: React.FC<Props> = ({
   expediente,
   movimientos
 }) => {
-  if (!expediente) return null;
-
   // Dark mode colors
   const bgCard = useColorModeValue('white', 'gray.800');
   const bgCardHeader = useColorModeValue('gray.50', 'gray.700');
@@ -43,6 +41,8 @@ export const ExpedienteDrawer: React.FC<Props> = ({
   const textSecondary = useColorModeValue('gray.600', 'gray.400');
   const timelineColor = useColorModeValue('gray.200', 'gray.600');
   const hoverBg = useColorModeValue('gray.50', 'gray.700');
+
+  if (!expediente) return null;
 
   const formatFecha = (fecha: Date | string) => {
     return new Date(fecha).toLocaleString('es-AR', {
@@ -93,7 +93,7 @@ export const ExpedienteDrawer: React.FC<Props> = ({
           w="32px"
           h="32px"
           borderRadius="full"
-          bg={useColorModeValue('white', 'gray.800')}
+          bg={bgCard}
           border="2px solid"
           borderColor={color}
           zIndex={1}
@@ -146,7 +146,7 @@ export const ExpedienteDrawer: React.FC<Props> = ({
 
           {item.observaciones && (
             <Text fontSize="xs" color="gray.500" mt={2} fontStyle="italic">
-              "{item.observaciones}"
+              &quot;{item.observaciones}&quot;
             </Text>
           )}
         </Box>
@@ -303,7 +303,7 @@ export const ExpedienteDrawer: React.FC<Props> = ({
                       doc.text('Extracto:', leftColX, yPos);
                       yPos += 6;
                       doc.setFont('helvetica', 'normal');
-                      const splitExtracto = doc.splitTextToSize(expediente.extracto || '', pageWidth - (margin * 2));
+                      const splitExtracto = doc.splitTextToSize(expediente.extracto || '', pageWidth - (margin * 2)) as string[];
                       doc.text(splitExtracto, leftColX, yPos);
                       yPos += (splitExtracto.length * 5) + 5;
                     } else {
@@ -368,7 +368,7 @@ export const ExpedienteDrawer: React.FC<Props> = ({
                         doc.text(fecha, margin + 2, yPos);
                         doc.text(tipo, margin + 40, yPos);
 
-                        const splitDetalle = doc.splitTextToSize(detalle, pageWidth - margin - 90 - margin);
+                        const splitDetalle = doc.splitTextToSize(detalle, pageWidth - margin - 90 - margin) as string[];
                         doc.text(splitDetalle, margin + 90, yPos);
 
                         // Calculate height for next row with more padding

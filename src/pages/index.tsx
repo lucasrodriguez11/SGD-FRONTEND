@@ -199,8 +199,8 @@ const HomePage = () => {
       if (n.type === 'NUEVO_MOVIMIENTO' || n.type === 'EXPEDIENTE_RECIBIDO' || n.type === 'EXPEDIENTE_CONFIRMADO' || n.type === 'EXPEDIENTE_ARCHIVADO' || n.type === 'EXPEDIENTE_REGISTRADO' || n.type === 'EXPEDIENTE_RECHAZADO') {
         // Recargar movimientos del despacho para obtener el último
         void movimientosApi.getByDespacho(despachoNombre).then((res) => {
-          if (res.success && res.data?.movimientos && res.data.movimientos.length > 0) {
-            const ultimoMov = res.data.movimientos[0]; // El más reciente
+          const ultimoMov = res.data?.movimientos?.[0];
+          if (res.success && ultimoMov) {
             const expedienteNum = typeof ultimoMov.expedienteId === 'object' && ultimoMov.expedienteId && 'numeroExpediente' in ultimoMov.expedienteId
               ? (ultimoMov.expedienteId as { numeroExpediente: string }).numeroExpediente
               : String(ultimoMov.expedienteId);
@@ -548,7 +548,7 @@ const HomePage = () => {
                         </Text>
                         {item.movimiento?.observaciones && (
                           <Text fontSize="xs" color={subtle} fontStyle="italic" mt={1}>
-                            "{item.movimiento.observaciones}"
+                            &quot;{item.movimiento.observaciones}&quot;
                           </Text>
                         )}
                       </Box>

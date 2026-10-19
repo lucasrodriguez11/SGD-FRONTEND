@@ -76,12 +76,13 @@ export const Navbar: React.FC = () => {
   React.useEffect(() => {
     const u = authUser.get<{ name?: string; despachoId?: string }>();
     if (u?.name) setDisplayName(u.name);
-    if (u?.despachoId) {
-      setMyDespId(u.despachoId);
+    const despachoId = u?.despachoId;
+    if (despachoId) {
+      setMyDespId(despachoId);
       // Cargar nombre del despacho
       void (async () => {
         try {
-          const despRes = await despachosApi.getById(u.despachoId);
+          const despRes = await despachosApi.getById(despachoId);
           if (despRes.success && despRes.data?.despacho?.nombre) {
             setMyDespachoNombre(despRes.data.despacho.nombre);
           }
@@ -305,8 +306,9 @@ export const Navbar: React.FC = () => {
                               } else {
                                 // Si existe, actualizar el estado readAt si viene del servidor
                                 const existingIdx = combined.findIndex(existing => existing.id === serverNotif.id || (existing.title === serverNotif.title && existing.text === serverNotif.text));
-                                if (existingIdx >= 0 && serverNotif.readAt && !combined[existingIdx].readAt) {
-                                  combined[existingIdx] = { ...combined[existingIdx], readAt: serverNotif.readAt };
+                                const existingItem = combined[existingIdx];
+                                if (existingItem && serverNotif.readAt && !existingItem.readAt) {
+                                  combined[existingIdx] = { ...existingItem, readAt: serverNotif.readAt };
                                 }
                               }
                             }
@@ -395,7 +397,7 @@ export const Navbar: React.FC = () => {
                               });
                             } catch { }
                           }
-                          router.push('/recepcion');
+                          void router.push('/recepcion');
                         } : undefined}
                       >
                         <Box flex="1">
